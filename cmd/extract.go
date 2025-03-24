@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
+	"log"
 	"time"
 )
 
@@ -28,8 +29,10 @@ to quickly create a Cobra application.`,
 		bar := progressbar.Default(int64(totalRecords))
 
 		for i := 0; i < totalRecords; i++ {
-			time.Sleep(50 * time.Millisecond) // Simulating network delay
-			bar.Add(1)                        // Increment progress
+			time.Sleep(50 * time.Millisecond)  // Simulating network delay
+			if err := bar.Add(1); err != nil { // ✅ Checking for errors
+				log.Fatalf("Failed to update progress bar: %v", err)
+			}
 		}
 
 		fmt.Println("\nData extraction completed successfully!")
