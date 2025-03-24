@@ -1,10 +1,11 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+Copyright © 2025 NAME HERE <arsalansayed9702@gmail.com>
 */
 package cmd
 
 import (
-	"github.com/pterm/pterm"
+	"fmt"
+	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"time"
 )
@@ -20,19 +21,18 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		pterm.Info.Println("Starting Data Extraction...")
+		fmt.Println("Extracting data...")
 
-		// Simulating extraction of 100 records
+		// Simulate data extraction (e.g., fetching 100 records)
 		totalRecords := 100
-		progressBar, _ := pterm.DefaultProgressbar.WithTotal(totalRecords).WithTitle("Extracting Data").Start()
+		bar := progressbar.Default(int64(totalRecords))
 
 		for i := 0; i < totalRecords; i++ {
 			time.Sleep(50 * time.Millisecond) // Simulating network delay
-			progressBar.Increment()           // Update progress
+			bar.Add(1)                        // Increment progress
 		}
 
-		progressBar.Stop()
-		pterm.Success.Println("Data Extraction Completed Successfully!")
+		fmt.Println("\nData extraction completed successfully!")
 	},
 }
 
