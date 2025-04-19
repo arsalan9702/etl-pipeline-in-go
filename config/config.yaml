@@ -1,0 +1,56 @@
+#general settings
+app:
+  name: "etl-pipleine-in-go"
+  version: "0.1.0"
+  log_level: "info"
+
+# extract settings
+extract:
+  api:
+    url: "https://api.example.com/data"
+    method: "GET"
+    auth_token: "${API_TOKEN}"
+    timeout_seconds: 30
+    retry_attempts: 3
+
+  database:
+    host: "localhost"
+    port: 5432
+    user: "${DB_USER}"
+    password: "${DB_PASSWORD}"
+    database: "etl-source-database" 
+    query: "SELECT * FROM et-table LIMIT 1000"
+    batch_size: 100
+
+  kafka:
+    brokers: ["localhost:9092"]
+    topic: "etl-data-stream"
+    group_id: "etl-consumer"
+    auto_offset_reset: "earliest"
+
+# transform settings
+transform: 
+  worker_pool_size: 4
+  validation:
+    required_fields: ["id", "name", "created_at"]
+
+load:
+  postgres:
+    host: "localhost"
+    port: 5432
+    user: "${DB_USER}"
+    password: "${DB_PASSWORD}"
+    database: "etl-target-db"
+    table: "processed_data"
+    batch_size: 100
+
+  bigquery:
+    project_id: "${GCP_PROJECT_ID}"
+    dataset: "etl-data"
+    table: "processed_data"
+
+  s3:
+    bucket: "etl-data-bucket"
+    region: "us-west-2"
+    path: "processed/"
+    file_format: "parquet"
