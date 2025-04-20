@@ -1,5 +1,14 @@
 package config
 
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/spf13/viper"
+)
+
 // Config holds all configuration for the application
 type Config struct {
 	App       AppConfig       `mapstructure:"app"`
@@ -94,4 +103,62 @@ type S3Config struct {
 	FileFormat string `mapstructure:"file_format"`
 }
 
+// LoadConfig loads configuration from config file and environment variables
+func LoadAppConfig(configPath string) (*Config, error){
+	var config Config
 
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+
+	if configPath != "" {
+		viper.AddConfigPath(configPath)
+	} else {
+		viper.AddConfigPath(".")
+		viper.AddConfigPath("./config")
+		viper.AddConfigPath("$HOME/.etl-pipeline-in-go")
+	}
+
+	// Reads config file
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	// Set up environment variable support with prefix
+	viper.SetEnvPrefix("ETL")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
+	// Process environment variable placeholders
+	for _, key := range viper.AllKeys(){
+		val := viper.GetString(key)
+		if strings.HasPrefix(val, "${") && strings.HasSuffix(val, "}"){
+			envVar := strings.TrimSuffix(strings.TrimPrefix(val, "${"), "}")
+			envVal := os.Getenv(envVar)
+			if envVal != "" {
+				viper.Set(key, envVal)
+			}
+		}
+	}
+
+	// Unmarshal config to struct
+	if err := viper.Unmarshal(&config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	return &config, nil
+}
+
+// GetConfigPath return the absolute path to the config directory
+func GetConfigPath() string {
+	// finding in current directory
+	if _, err := os.Stat(filepath.Join(".", "config.yaml")); err == nil{
+		return "."
+	}
+
+	// finding in ./config directory
+	if _, err := os.Stat(filepath.Join("config", "config.yaml")); err == nil {
+		return "config"
+	}
+
+	return "."
+}
